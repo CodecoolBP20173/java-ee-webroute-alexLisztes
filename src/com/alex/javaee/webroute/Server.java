@@ -2,6 +2,9 @@ package com.alex.javaee.webroute;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 
 import com.alex.javaee.annotations.WebRoute;
@@ -21,8 +24,38 @@ public class Server {
     static class MyHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange t) throws IOException {
-            String response = "This is the response";
-            t.sendResponseHeaders(200, response.getBytes().length);
+            String requestPath = t.getRequestURI().getPath();
+            String response = "";
+            Method[] methods = this.getClass().getMethods();
+
+            for(Method m : methods) {
+                Annotation[] annotations = m.getDeclaredAnnotations();
+
+                for (Annotation a : annotations) {
+
+                    if (a instanceof WebRoute) {
+                        WebRoute annotation = (WebRoute) a;
+
+                        if (annotation.path().equals(requestPath)) {
+
+                            try {
+                                response = (String) m.invoke(this, t);
+                                break;
+                            } catch (IllegalAccessException | InvocationTargetException e) {
+                                e.printStackTrace();
+                                response = "There was an error:\n" + e.getMessage();
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (response.equals("")) {
+                response = "There was an error!";
+                t.sendResponseHeaders(404, response.getBytes().length);
+            } else {
+                t.sendResponseHeaders(200, response.getBytes().length);
+            }
             OutputStream os = t.getResponseBody();
             os.write(response.getBytes());
             os.close();
