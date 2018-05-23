@@ -1,4 +1,4 @@
-package com.alex.javaee;
+package com.alex.javaee.webroute;
 
 import java.io.IOException;
 import java.io.OutputStream;
