@@ -6,6 +6,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.alex.javaee.annotations.WebRoute;
 import com.sun.net.httpserver.HttpExchange;
@@ -13,6 +15,8 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 public class Server {
+
+    public static List<String> names = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
@@ -36,7 +40,7 @@ public class Server {
                     if (a instanceof WebRoute) {
                         WebRoute annotation = (WebRoute) a;
 
-                        if (annotation.path().equals(requestPath)) {
+                        if (annotation.path().equals(requestPath) && annotation.method().equals(t.getRequestMethod())) {
 
                             try {
                                 response = (String) m.invoke(this, t);
@@ -64,6 +68,17 @@ public class Server {
         @WebRoute(path="/test")
         public String inTest(HttpExchange t) {
             return "Showing the test page!";
+        }
+
+        @WebRoute(path="/user")
+        public String getUserTest(HttpExchange t) {
+            return String.join(",", names);
+        }
+
+        @WebRoute(method="POST", path="/user")
+        public String postUserTest(HttpExchange t) {
+            names.add("Player" + Integer.toString(names.size() + 1));
+            return "Added new user";
         }
     }
 }
