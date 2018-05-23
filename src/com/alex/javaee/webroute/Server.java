@@ -6,7 +6,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 
+import com.alex.javaee.annotations.PathParam;
 import com.alex.javaee.annotations.WebRoute;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -36,7 +38,10 @@ public class Server {
                     if (a instanceof WebRoute) {
                         WebRoute annotation = (WebRoute) a;
 
-                        if (annotation.path().equals(requestPath)) {
+                        String compareWith = "/" + requestPath.split("/")[1];
+
+
+                        if (annotation.path().startsWith(compareWith)) {
 
                             try {
                                 response = (String) m.invoke(this, t);
@@ -64,6 +69,11 @@ public class Server {
         @WebRoute(path="/test")
         public String inTest(HttpExchange t) {
             return "Showing the test page!";
+        }
+
+        @WebRoute(path="/user/<username>")
+        public String inUser(HttpExchange t, @PathParam(parameter = "username") String username) {
+            return "Username: " + username;
         }
     }
 }
